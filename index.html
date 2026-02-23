@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RC Command Center</title>
+    <style>
+        body {
+            background-color: #1a1a1a;
+            color: #ffcc00;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            margin: 0;
+        }
+        h1 { color: #ffcc00; text-transform: uppercase; border-bottom: 2px dashed #ffcc00; padding-bottom: 10px; }
+        .panel {
+            background-color: #333;
+            border: 3px solid #ffcc00;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #ffcc00;
+            color: #000;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+        button:active { background-color: #ccaa00; }
+        input {
+            padding: 10px;
+            font-size: 16px;
+            width: 90%;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        #timerDisplay { font-size: 60px; font-weight: bold; color: #ff3333; margin: 10px 0; }
+        #scenarioText, #crewText { font-size: 20px; margin-top: 15px; font-weight: bold; color: #fff;}
+    </style>
+</head>
+<body>
+
+    <h1>Command Center</h1>
+
+    <div class="panel">
+        <h2>1. Emergency Alert</h2>
+        <button onclick="generateScenario()">🚨 Generate Scenario</button>
+        <div id="scenarioText">Awaiting dispatch...</div>
+    </div>
+
+    <div class="panel">
+        <h2>2. Draft Crew</h2>
+        <input type="text" id="playerNames" value="Glenn, Jodie, Sierra, Isaac, Eathan, Renee, Olivia, Harley, Peter, Paula">
+        <button onclick="draftCrew()">👷 Assign Vehicles</button>
+        <div id="crewText">No crew assigned.</div>
+    </div>
+
+    <div class="panel">
+        <h2>3. Countdown Timer</h2>
+        <div id="timerDisplay">03:00</div>
+        <button onclick="startTimer()">⏳ Start 3 Min Timer</button>
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function playBeep(freq, type, duration) {
+            if(audioCtx.state === 'suspended') audioCtx.resume();
+            const oscillator = audioCtx.createOscillator();
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            oscillator.connect(audioCtx.destination);
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        function generateScenario() {
+            const scenarios = [
+                "🚨 MAJOR MUDSLIDE! The main road is blocked. Clear the rocks so the ambulance can pass!",
+                "🚨 BRIDGE COLLAPSE! Debris is blocking the river. Use the digger to clear the channel.",
+                "🚨 BOULDER ON THE HIGHWAY! A massive rock is stopping supply trucks. Move it to the drop zone!",
+                "🚨 LOGGING ACCIDENT! Fallen timber has trapped a vehicle. Clear the path immediately!",
+                "🚨 SINKHOLE OPENED! Fill the hazard zone with dirt before the next storm hits!",
+                "🚨 MINE SHAFT COLLAPSE! Clear the rubble at the entrance to rescue the trapped miners!"
+            ];
+            const random = scenarios[Math.floor(Math.random() * scenarios.length)];
+            document.getElementById("scenarioText").innerText = random;
+            playBeep(400, 'square', 0.5); 
+        }
+
+        function draftCrew() {
+            const input = document.getElementById("playerNames").value;
+            if(!input) { alert("Enter some names first!"); return; }
+            
+            let players = input.split(',').map(name => name.trim()).filter(name => name !== "");
+            if(players.length < 2) { alert("You need at least 2 players!"); return; }
+
+            players = players.sort(() => 0.5 - Math.random());
+
+            let assignments = `🚜 Digger: ${players[0]} <br> 🚛 Dump Truck: ${players[1]}`;
+            
+            if(players.length >= 3) assignments += `<br> 🚜 Bulldozer: ${players[2]}`;
+            if(players.length >= 4) assignments += `<br> 🏗️ Forklift: ${players[3]}`;
+
+            document.getElementById("crewText").innerHTML = assignments;
+        }
+
+        let timerInterval;
+        function startTimer() {
+            clearInterval(timerInterval);
+            let timeLeft = 180; 
+            playBeep(800, 'sine', 0.3); 
+
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                let minutes = Math.floor(timeLeft / 60);
+                let seconds = timeLeft % 60;
+                document.getElementById("timerDisplay").innerText = 
+                    (minutes < 10 ? "0" : "") + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    document.getElementById("timerDisplay").innerText = "TIME UP!";
+                    playBeep(200, 'sawtooth', 1.5); 
+                }
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
